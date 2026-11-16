@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-ff4b4b)
 ![LLM](https://img.shields.io/badge/LLM-Groq%20Llama%203.3-orange)
-![Tests](https://img.shields.io/badge/tests-pytest-green)
+[![CI](https://github.com/sanket1035/codeviva/actions/workflows/ci.yml/badge.svg)](https://github.com/sanket1035/codeviva/actions/workflows/ci.yml)
 
 ![CodeViva main screen](docs/screenshot-main.png)
 
@@ -52,6 +52,35 @@ flowchart LR
 - **Structured output:** the reply must be a JSON object with a summary, per-function explanations and exactly 10 viva questions.
 - **Temperature 0.2** for stable answers; the output language is set in the prompt.
 
+## Example output
+
+The files in [`examples/`](examples) are generated from the four programs in [`samples/`](samples) by `python scripts/generate_examples.py`. They are produced in **offline mode** (AST only, no LLM), so they are reproducible and CI checks that they match the code. LLM-written explanations in English, Hinglish, Hindi or Marathi need a `GROQ_API_KEY` and are not committed here.
+
+| Sample | Functions | Loops | What it shows | Output |
+|---|---|---|---|---|
+| `bank_account.py` | 6 | 1 | Helper calls, recursion (`factorial`), loop | [`examples/bank_account`](examples/bank_account) |
+| `student_grades.py` | 4 | 3 | Dictionaries, if/elif chain, nested calls | [`examples/student_grades`](examples/student_grades) |
+| `fibonacci_primes.py` | 5 | 2 | Recursion vs loop, `__main__` guard | [`examples/fibonacci_primes`](examples/fibonacci_primes) |
+| `stack_queue.py` | 7 | 1 | Classes and methods (see limitations) | [`examples/stack_queue`](examples/stack_queue) |
+
+Each folder holds `diagram.mmd` (Mermaid, renders on GitHub), `explanation.md` and `viva.md`. Call graph for `student_grades.py`:
+
+```mermaid
+flowchart LR
+    MAIN(["▶ program start"]):::entry
+    average["average(marks)"]:::looped
+    grade["grade(avg)"]
+    topper["topper(students)"]:::looped
+    report["report(students)"]:::looped
+    MAIN --> report
+    topper --> average
+    report --> average
+    report --> topper
+    report --> grade
+    classDef entry fill:#111,stroke:#111,color:#fff
+    classDef looped fill:#f6d9a8,stroke:#b45309,color:#451a03
+```
+
 ## Quick start
 
 ```bash
@@ -80,9 +109,13 @@ codeviva/
   diagram.py      Mermaid generation: call graph and per-function flow
   llm.py          Groq client, prompts, offline fallback
   verify.py       Hallucination check against the AST
+  report.py       Markdown rendering of explanations and viva sheets
 app.py            Streamlit interface
-samples/          Example lab program
+samples/          Four example lab programs
+examples/         Generated diagram, explanation and viva sheet per sample
+scripts/          generate_examples.py
 tests/            Unit tests
+.github/          CI workflow
 static/fonts/     Fonts served by Streamlit
 ```
 
@@ -92,19 +125,36 @@ static/fonts/     Fonts served by Streamlit
 pytest
 ```
 
-The tests cover function and call extraction, loop and recursion detection, Mermaid output and the hallucination check.
+The suite covers the AST analyzer (arguments, calls, loops, decisions, recursion, async, nested functions, imports, syntax errors), the check that every function name in the LLM text exists in the code, Mermaid generation, and an end-to-end run of every file in `samples/`. A few tests named `known_limitation` pin the behaviour described below, so a change in it shows up in the diff. GitHub Actions runs the suite on Python 3.10 to 3.13 for every push and pull request.
+
+## Live demo
+
+Streamlit Community Cloud can host this app straight from the repository:
+
+1. Sign in at [share.streamlit.io](https://share.streamlit.io) with GitHub and choose **Create app**.
+2. Repository `sanket1035/codeviva`, branch `main`, main file `app.py`.
+3. Under **Advanced settings > Secrets** add `GROQ_API_KEY = "..."` (optional; without it the demo runs in offline mode).
+
+Add the resulting URL here once the app is deployed.
 
 ## Limitations
 
-- Python only at the moment.
-- Verification checks function names, not whether an explanation is logically correct.
-- Explanations of very large files depend on the model's context window.
-- Tested on a small set of sample programs; no large-scale accuracy evaluation yet.
+Where it can be wrong or miss things (each point below is covered by a test or by the committed examples):
+
+- **Python only.** The parser is Python's `ast`; other languages are not supported.
+- **Methods are matched by name, not by class.** Two classes that both define `run` appear as one `run` node, and the first definition wins. Method calls on other objects (`stack.push(x)`) are not linked to `push`; only `self.method()` and `cls.method()` are. In `stack_queue.py` this is why `balanced` has no edge to `Stack.push`.
+- **The call graph is static.** Calls through variables, callbacks, `getattr`, decorators or `eval` are not resolved.
+- **The verification step only checks names written as `name()`.** A function mentioned without parentheses is not checked, and an invented name that equals a Python builtin (for example `sorted()`) passes.
+- **Verification checks existence, not correctness.** An explanation can name real functions and still describe them wrongly. The viva answers are not checked for logic.
+- **Offline mode is mechanical.** Without an API key the explanations are templates built from the AST, and some programs give fewer than 10 viva questions (6 for `student_grades.py`).
+- **Large files** are limited by the model's context window; no chunking is implemented.
+- **No accuracy or hallucination rate has been measured.** The tests prove the checks behave as designed on the bundled samples, not how often an LLM hallucinates.
 
 ## Roadmap
 
 - Support for C, C++ and Java using tree-sitter
 - Measured hallucination rate on a larger set of lab programs
+- Class-aware method resolution
 - Class and module level diagrams
 - Export of the explanation and viva sheet as PDF
 

@@ -10,6 +10,7 @@ load_dotenv()
 from codeviva.analyzer import analyze
 from codeviva.diagram import call_graph, function_flow
 from codeviva.llm import explain_and_quiz, llm_available
+from codeviva.report import viva_markdown
 from codeviva.verify import check
 
 MERMAID_JS = os.getenv("MERMAID_JS_URL", "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
@@ -182,8 +183,7 @@ with t3:
     for i, qa in enumerate(res.get("viva", []), 1):
         with st.expander(f"Q{i}. {qa['q']}"):
             st.write(qa["a"])
-    md = "\n\n".join(f"**Q{i}. {x['q']}**\n\n{x['a']}" for i, x in enumerate(res.get("viva", []), 1))
-    st.download_button("Download viva sheet (.md)", md, "viva.md")
+    st.download_button("Download viva sheet (.md)", viva_markdown(res), "viva.md")
 
 with t4:
     v = check(res, a)

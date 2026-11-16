@@ -1,0 +1,13 @@
+flowchart LR
+    MAIN(["▶ program start"]):::entry
+    average["average(marks)"]:::looped
+    grade["grade(avg)"]
+    topper["topper(students)"]:::looped
+    report["report(students)"]:::looped
+    MAIN --> report
+    topper --> average
+    report --> average
+    report --> topper
+    report --> grade
+    classDef entry fill:#111,stroke:#111,color:#fff
+    classDef looped fill:#f6d9a8,stroke:#b45309,color:#451a03

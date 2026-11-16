@@ -1,0 +1,18 @@
+flowchart LR
+    MAIN(["▶ program start"]):::entry
+    validate_amount["validate_amount(amount)"]
+    deposit["deposit(balance, amount)"]
+    withdraw["withdraw(balance, amount)"]
+    interest["interest(balance, rate, years)"]:::looped
+    factorial["factorial(n)"]
+    main["main()"]
+    MAIN --> main
+    deposit --> validate_amount
+    withdraw --> validate_amount
+    factorial -.-> factorial
+    main --> deposit
+    main --> withdraw
+    main --> interest
+    main --> factorial
+    classDef entry fill:#111,stroke:#111,color:#fff
+    classDef looped fill:#f6d9a8,stroke:#b45309,color:#451a03

@@ -35,9 +35,20 @@ def _call_name(node: ast.Call) -> str | None:
     f = node.func
     if isinstance(f, ast.Name):
         return f.id
+    # Only ``self.method()`` / ``cls.method()`` is resolved to a user-defined
+    # function. ``obj.pop()`` could be any type, so it is kept as an external
+    # call instead of being guessed as a call to a function named ``pop``.
     if isinstance(f, ast.Attribute):
-        return f.attr
+        if isinstance(f.value, ast.Name) and f.value.id in ("self", "cls"):
+            return f.attr
+        return f"{ast.unparse(f.value)}.{f.attr}" if _simple_chain(f.value) else None
     return None
+
+
+def _simple_chain(node: ast.AST) -> bool:
+    while isinstance(node, ast.Attribute):
+        node = node.value
+    return isinstance(node, ast.Name)
 
 
 def analyze(source: str) -> Analysis:

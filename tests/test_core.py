@@ -3,7 +3,9 @@ from codeviva.diagram import call_graph
 from codeviva.llm import offline_fallback
 from codeviva.verify import check
 
-SRC = open("samples/bank_account.py", encoding="utf-8").read()
+from pathlib import Path
+
+SRC = (Path(__file__).resolve().parent.parent / "samples" / "bank_account.py").read_text(encoding="utf-8")
 
 
 def test_functions_and_calls():

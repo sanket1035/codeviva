@@ -1,0 +1,15 @@
+flowchart LR
+    MAIN(["▶ program start"]):::entry
+    fib_recursive["fib_recursive(n)"]
+    fib_iterative["fib_iterative(n)"]:::looped
+    is_prime["is_prime(n)"]:::looped
+    primes_upto["primes_upto(limit)"]
+    main["main()"]
+    MAIN --> main
+    fib_recursive -.-> fib_recursive
+    primes_upto --> is_prime
+    main --> fib_iterative
+    main --> primes_upto
+    main --> fib_recursive
+    classDef entry fill:#111,stroke:#111,color:#fff
+    classDef looped fill:#f6d9a8,stroke:#b45309,color:#451a03

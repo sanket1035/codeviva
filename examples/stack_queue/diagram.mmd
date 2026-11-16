@@ -1,0 +1,13 @@
+flowchart LR
+    MAIN(["▶ program start"]):::entry
+    balanced["balanced(text)"]:::looped
+    __init__["__init__(self)"]
+    push["push(self, x)"]
+    pop["pop(self)"]
+    is_empty["is_empty(self)"]
+    enqueue["enqueue(self, x)"]
+    dequeue["dequeue(self)"]
+    MAIN --> balanced
+    pop --> is_empty
+    classDef entry fill:#111,stroke:#111,color:#fff
+    classDef looped fill:#f6d9a8,stroke:#b45309,color:#451a03
