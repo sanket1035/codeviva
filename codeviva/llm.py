@@ -6,7 +6,10 @@ import os
 
 from .analyzer import Analysis
 
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Groq retires models over time (llama-3.3-70b-versatile was shut down on
+# 2026-08-16). Override with the GROQ_MODEL variable instead of editing code.
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+MODEL = os.getenv("GROQ_MODEL") or DEFAULT_MODEL
 
 
 def _facts(a: Analysis) -> str:
@@ -45,13 +48,19 @@ def explain_and_quiz(a: Analysis, language: str = "English") -> dict:
         '"viva": [{"q": str, "a": str}] } with exactly 10 viva questions, easy to hard. '
         f"Write in {language}."
     )
-    resp = client.chat.completions.create(
-        model=MODEL, temperature=0.2,
-        response_format={"type": "json_object"},
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": _facts(a)}],
-    )
-    return json.loads(resp.choices[0].message.content)
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL, temperature=0.2,
+            response_format={"type": "json_object"},
+            messages=[{"role": "system", "content": system},
+                      {"role": "user", "content": _facts(a)}],
+        )
+        return json.loads(resp.choices[0].message.content)
+    except Exception as e:  # network, bad key, retired model, invalid JSON
+        res = offline_fallback(a)
+        res["summary"] += (f" (The AI call failed: {type(e).__name__}. Showing the offline "
+                           f"explanation. Model in use: {MODEL}; check GROQ_API_KEY and GROQ_MODEL.)")
+        return res
 
 
 def offline_fallback(a: Analysis) -> dict:

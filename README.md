@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-ff4b4b)
-![LLM](https://img.shields.io/badge/LLM-Groq%20Llama%203.3-orange)
+![LLM](https://img.shields.io/badge/LLM-Groq-orange)
 [![CI](https://github.com/sanket1035/codeviva/actions/workflows/ci.yml/badge.svg)](https://github.com/sanket1035/codeviva/actions/workflows/ci.yml)
 
 ![CodeViva main screen](docs/screenshot-main.png)
@@ -17,7 +17,7 @@ LLMs explain code well but hallucinate: they can describe a function that is not
 |---|---|---|
 | Functions, arguments, calls, loops, decisions | Python `ast` module | Deterministic, always correct |
 | Flow diagram | Generated as Mermaid text from the AST | Cannot contain functions that do not exist |
-| Explanations and viva Q&A | Groq (Llama 3.3 70B) | Language is what LLMs are good at |
+| Explanations and viva Q&A | Groq (`openai/gpt-oss-120b` by default) | Language is what LLMs are good at |
 | Check of the LLM output | Verification step | Flags any function name not in the code |
 
 ## Features
@@ -98,7 +98,7 @@ Without a `GROQ_API_KEY` the app still runs in offline mode, with AST-based expl
 | Variable | Default | Purpose |
 |---|---|---|
 | `GROQ_API_KEY` | none | Enables LLM explanations |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Model used for explanations |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Groq model ID; change it here when Groq retires a model |
 | `MERMAID_JS_URL` | jsDelivr CDN | Override to serve Mermaid locally |
 
 ## Project structure
